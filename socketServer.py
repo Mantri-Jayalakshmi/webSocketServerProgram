@@ -1,4 +1,4 @@
-# Socket server program
+# Websocket server program
 
 import socket
 import threading
