@@ -42,7 +42,7 @@ import threading as Threading
 
 Client_sockets_dict = {}
 HOST = '138.68.140.83'
-PORT = 5645
+PORT = 5518
 
 Server_socket = Socket.socket(Socket.AF_INET, Socket.SOCK_STREAM)
 
