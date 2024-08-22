@@ -1,88 +1,41 @@
-# Socket server program
+import socket
+import threading
 
-# import threading
-# import socket
+HEADER = 64
+PORT = 5982
+SERVER = "138.68.140.83"
+print(socket.gethostname())
+ADDR = (SERVER, PORT)
+FORMAT = 'UTF-8'
+DISCONNECT_MESSAGE = "bye"
 
-# def handle_client(client_socket):
-#     while True:
-#         data = client_socket.recv(1024).decode()
-#         if not data:
-#             break
-#         print("from connected user: " + str(data))
-#         data = input(' jayalakshmi> ')
-#         client_socket.send(data.encode())  
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind(ADDR)
 
-#     client_socket.close()  
+def handle_client(conn, addr):
+    print(f"[NEW CONNECTION] {addr} connected.")
+    connected = True
+    while connected:
+        msg_length = conn.recv(HEADER).decode(FORMAT)
+        if msg_length:
+            msg_length = int(msg_length)
+            msg = conn.recv(msg_length).decode(FORMAT)
+            if msg == DISCONNECT_MESSAGE:
+                connected = False
+            print(f"[{addr}] {msg}")
 
-# def server_program():
-#     # host = "192.168.1.58"
-#     host = "138.68.140.83"
-#     # host = socket.gethostname()
-#     print(host)
-#     port = 5039 
+            conn.send(f"Thanks from server for your message: ({msg})".encode(FORMAT))
 
-#     server_socket = socket.socket()  
-#     server_socket.bind((host, port))  
+    conn.close()
 
-#     server_socket.listen(14)
-#     client_sockets = []
+def start():
+    server.listen()
+    print(f"[LISTENING] Server is listening on {SERVER}")
+    while True:
+        conn, addr = server.accept()
+        thread = threading.Thread(target=handle_client, args=(conn, addr))
+        thread.start()
+        print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
 
-#     while True:
-#         # Accept incoming connections
-#         client_socket, address = server_socket.accept()
-#         print("Connection from: " + str(address))
-#         client_sockets.append(client_socket)
-#         threading.Thread(target=handle_client, args=(client_socket,)).start()
-
-# if __name__ == '__main__':
-#     server_program()
-
-import socket as Socket
-import threading as Threading
-
-Client_sockets_dict = {}
-HOST = '138.68.140.83'
-PORT = 5518
-
-Server_socket = Socket.socket(Socket.AF_INET, Socket.SOCK_STREAM)
-
-Server_socket.bind((HOST, PORT))
-Server_socket.listen(5)
-print("Server is listening on ", HOST, ":", PORT)
-
-def Handle_client(Client_socket):
-    try:
-        Name = Client_socket.recv(1024)
-        Client_sockets_dict[Client_socket] = Name.decode()
-        while True:
-
-            Data = Client_socket.recv(1024)
-            if not Data:
-                break
-
-            Message = Data.decode()
-
-            if Message == 'exit':
-
-                Client_socket.send(Message.encode())
-                Client_sockets_dict.pop(Client_socket)
-            else:
-
-                print("Received message: \n" + Client_sockets_dict[Client_socket] + ": " + Message + "\n")
-
-                for Key in Client_sockets_dict.keys():
-                    if Key != Client_socket:
-                        Key.send(((Client_sockets_dict[Client_socket] + ": " + Message).encode()))
-    except ConnectionResetError:
-        print("Conection closed")
-        Client_sockets_dict.pop(Client_socket)
-        Client_socket.close()
-
-while True:
-
-    Client_socket, Client_address = Server_socket.accept()
-    print("Accepted connection from", Client_address)
-
-    client_handler = Threading.Thread(target = Handle_client, args = (Client_socket,))
-    client_handler.start()
-
+print("[STARTING] server is starting...")
+start()
